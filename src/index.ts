@@ -1,21 +1,18 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
-import { FilesystemResourceLoader } from "./services/FilesystemResourceLoader.js";
-import { JsonResourceMetadataParser } from "./services/parsers/JsonResourceMetadataParser.js";
-import { MarkdownCommentMetadataParser } from "./services/parsers/MarkdownCommentMetadataParser.js";
-import { MarkdownSectionParser } from "./services/parsers/MarkdownSectionParser.js";
-import { InMemoryResourceRegistry } from "./services/InMemoryResourceRegistry.js";
-import { ConsoleLogger } from "./services/ConsoleLogger.js";
-import { getConfig } from "./config/config.js";
-import { GetAvailableResourcesTool } from "./tools/getAvailableResources.js";
-import { GetResourceContentTool } from "./tools/getResourceContent.js";
-import { FindResourceByPhrasesTool } from "./tools/findResourceByPhrases.js";
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
+import { FilesystemResourceLoader } from './services/FilesystemResourceLoader.js';
+import { JsonResourceMetadataParser } from './services/parsers/JsonResourceMetadataParser.js';
+import { MarkdownCommentMetadataParser } from './services/parsers/MarkdownCommentMetadataParser.js';
+import { MarkdownSectionParser } from './services/parsers/MarkdownSectionParser.js';
+import { InMemoryResourceRegistry } from './services/InMemoryResourceRegistry.js';
+import { ConsoleLogger } from './services/ConsoleLogger.js';
+import { getConfig } from './config/config.js';
+import { GetAvailableResourcesTool } from './tools/getAvailableResources.js';
+import { GetResourceContentTool } from './tools/getResourceContent.js';
+import { FindResourceByPhrasesTool } from './tools/findResourceByPhrases.js';
 
 async function main(): Promise<void> {
   const logger = new ConsoleLogger();
@@ -48,7 +45,7 @@ async function main(): Promise<void> {
   const findResourceByPhrasesTool = new FindResourceByPhrasesTool(registry);
 
   const server = new Server(
-    { name: "resource-provider-mcp", version: "1.0.0" },
+    { name: 'resource-provider-mcp', version: '1.0.0' },
     { capabilities: { tools: {} } }
   );
 
@@ -68,51 +65,50 @@ async function main(): Promise<void> {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
       {
-        name: "getAvailableResources",
+        name: 'getAvailableResources',
         description:
           "List all resources (formatted). Optional prefix to narrow by id prefix like 'tests|testing'. Content is not included.",
         inputSchema: {
-          type: "object",
+          type: 'object',
           properties: {
             prefix: {
-              type: "string",
-              description: "Optional ID prefix to filter resources",
+              type: 'string',
+              description: 'Optional ID prefix to filter resources',
             },
           },
         },
       },
       {
-        name: "getResourceContent",
-        description: "Retrieves the full content of a resource and optionally its children.",
+        name: 'getResourceContent',
+        description: 'Retrieves the full content of a resource and optionally its children.',
         inputSchema: {
-          type: "object",
+          type: 'object',
           properties: {
             id: {
-              type: "string",
-              description: "Resource ID",
+              type: 'string',
+              description: 'Resource ID',
             },
             showChildren: {
-              type: "boolean",
-              description: "Include children in output",
+              type: 'boolean',
+              description: 'Include children in output',
             },
           },
-          required: ["id"],
+          required: ['id'],
         },
       },
       {
-        name: "findResourceByPhrases",
-        description:
-          "Searches for resources by phrases (case-insensitive whole-word match).",
+        name: 'findResourceByPhrases',
+        description: 'Searches for resources by phrases (case-insensitive whole-word match).',
         inputSchema: {
-          type: "object",
+          type: 'object',
           properties: {
             phrases: {
-              type: "array",
-              items: { type: "string" },
-              description: "Array of search phrases",
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of search phrases',
             },
           },
-          required: ["phrases"],
+          required: ['phrases'],
         },
       },
     ],
@@ -120,28 +116,28 @@ async function main(): Promise<void> {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
-      if (request.params.name === "getAvailableResources") {
+      if (request.params.name === 'getAvailableResources') {
         const args = GetAvailableResourcesSchema.parse(request.params.arguments);
         const formatted = await getAvailableResourcesTool.execute(args);
 
         return {
           content: [
             {
-              type: "text",
+              type: 'text',
               text: formatted,
             },
           ],
         };
       }
 
-      if (request.params.name === "getResourceContent") {
+      if (request.params.name === 'getResourceContent') {
         const args = GetResourceContentSchema.parse(request.params.arguments);
         const result = await getResourceContentTool.execute(args);
 
         return {
           content: [
             {
-              type: "text",
+              type: 'text',
               text: result.text,
             },
           ],
@@ -149,14 +145,14 @@ async function main(): Promise<void> {
         };
       }
 
-      if (request.params.name === "findResourceByPhrases") {
+      if (request.params.name === 'findResourceByPhrases') {
         const args = FindResourceByPhrasesSchema.parse(request.params.arguments);
         const formatted = await findResourceByPhrasesTool.execute(args);
 
         return {
           content: [
             {
-              type: "text",
+              type: 'text',
               text: formatted,
             },
           ],
@@ -170,7 +166,7 @@ async function main(): Promise<void> {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: `Error: ${errorMessage}`,
           },
         ],
@@ -182,7 +178,7 @@ async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
-  logger.info("Resource Provider MCP server running via stdio");
+  logger.info('Resource Provider MCP server running via stdio');
 }
 
 main().catch((error) => {

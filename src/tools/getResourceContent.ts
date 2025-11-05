@@ -3,7 +3,10 @@ import { ResourceRegistry } from '../core/interfaces/ResourceRegistry.js';
 export class GetResourceContentTool {
   constructor(private readonly registry: ResourceRegistry) {}
 
-  async execute(args: { id: string; showChildren?: boolean }): Promise<{ text: string; isError?: boolean }> {
+  async execute(args: {
+    id: string;
+    showChildren?: boolean;
+  }): Promise<{ text: string; isError?: boolean }> {
     const resource = this.registry.getById(args.id);
 
     if (!resource) {

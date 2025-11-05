@@ -2,13 +2,21 @@ import { ResourceRegistry } from '../core/interfaces/ResourceRegistry.js';
 import { ResourceHierarchyBuilder } from '../services/ResourceHierarchyBuilder.js';
 import { Resource } from '../core/interfaces/Resource.js';
 
+interface SerializedResource {
+  id: string;
+  name: string;
+  type: string;
+  description: string | null;
+  whenToLoad: string | null;
+  importance: string | null;
+  children: SerializedResource[];
+}
+
 export class GetAvailableResourcesTool {
   constructor(private readonly registry: ResourceRegistry) {}
 
   async execute(args: { prefix?: string }): Promise<string> {
-    const flatItems = args.prefix
-      ? this.registry.getByPrefix(args.prefix)
-      : this.registry.getAll();
+    const flatItems = args.prefix ? this.registry.getByPrefix(args.prefix) : this.registry.getAll();
 
     // Build hierarchical structure
     const hierarchyBuilder = new ResourceHierarchyBuilder();
@@ -21,7 +29,7 @@ export class GetAvailableResourcesTool {
     );
   }
 
-  private serializeResource(r: Resource): any {
+  private serializeResource(r: Resource): SerializedResource {
     return {
       id: r.id,
       name: r.name,

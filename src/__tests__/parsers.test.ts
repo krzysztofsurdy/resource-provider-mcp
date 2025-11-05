@@ -28,10 +28,7 @@ describe('JsonResourceMetadataParser', () => {
       importance: 'high',
     };
 
-    fs.writeFileSync(
-      path.join(testDir, 'resource.json'),
-      JSON.stringify(resourceData)
-    );
+    fs.writeFileSync(path.join(testDir, 'resource.json'), JSON.stringify(resourceData));
 
     const results = await parser.parse(testDir);
 
@@ -71,20 +68,14 @@ describe('JsonResourceMetadataParser', () => {
     const dirName = 'MyContext';
     const dirPath = path.join(testDir, dirName);
     fs.mkdirSync(dirPath);
-    fs.writeFileSync(
-      path.join(dirPath, 'resource.json'),
-      JSON.stringify({ description: 'test' })
-    );
+    fs.writeFileSync(path.join(dirPath, 'resource.json'), JSON.stringify({ description: 'test' }));
 
     const results = await parser.parse(dirPath);
     expect(results[0].name).toBe(dirName);
   });
 
   it('should have empty children array', async () => {
-    fs.writeFileSync(
-      path.join(testDir, 'resource.json'),
-      JSON.stringify({ description: 'test' })
-    );
+    fs.writeFileSync(path.join(testDir, 'resource.json'), JSON.stringify({ description: 'test' }));
 
     const results = await parser.parse(testDir);
     expect(results[0].children).toEqual([]);
@@ -108,8 +99,8 @@ describe('JsonResourceMetadataParser', () => {
     const results = await parser.parse(testDir);
 
     expect(results).toHaveLength(2);
-    expect(results.some(r => r.name === path.basename(testDir))).toBe(true);
-    expect(results.some(r => r.name === 'subcontext')).toBe(true);
+    expect(results.some((r) => r.name === path.basename(testDir))).toBe(true);
+    expect(results.some((r) => r.name === 'subcontext')).toBe(true);
   });
 
   it('should allow subdirectories without resource.json under a parent with resource.json', async () => {
@@ -315,7 +306,7 @@ Content for section 2.
 
     const results = await parser.parse(mdFile);
 
-    const sections = results.filter(r => r.type === 'section');
+    const sections = results.filter((r) => r.type === 'section');
     expect(sections.length).toBeGreaterThan(0);
   });
 
@@ -339,7 +330,7 @@ Content here.
 
     // MarkdownSectionParser doesn't extract metadata - it only splits into sections
     expect(results.length).toBe(2); // Main and Section 1
-    expect(results.every(r => r.description === undefined)).toBe(true);
+    expect(results.every((r) => r.description === undefined)).toBe(true);
   });
 
   it('should create hierarchical IDs with filename and section', async () => {
@@ -378,7 +369,7 @@ Section content here.`;
 
     const results = await parser.parse(mdFile);
 
-    expect(results.some(r => r.content && r.content.includes('Section content'))).toBe(true);
+    expect(results.some((r) => r.content && r.content.includes('Section content'))).toBe(true);
   });
 
   it('should handle multiple heading levels', async () => {

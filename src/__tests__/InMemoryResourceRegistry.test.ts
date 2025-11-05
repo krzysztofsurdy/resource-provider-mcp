@@ -44,7 +44,9 @@ describe('InMemoryResourceRegistry', () => {
       const child2 = createMockResource('parent|child2', 'Child 2', 'file');
       const parent = createMockResource('parent', 'Parent', 'context', [child1, child2]);
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([parent]);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([
+        parent,
+      ]);
 
       await registry.reload();
 
@@ -60,7 +62,9 @@ describe('InMemoryResourceRegistry', () => {
       const child = createMockResource('parent|child', 'Child', 'file', [grandchild]);
       const parent = createMockResource('parent', 'Parent', 'context', [child]);
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([parent]);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([
+        parent,
+      ]);
 
       await registry.reload();
 
@@ -70,13 +74,17 @@ describe('InMemoryResourceRegistry', () => {
 
     it('should clear existing resources before reload', async () => {
       const resource1 = createMockResource('test1', 'Test 1');
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([resource1]);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([
+        resource1,
+      ]);
 
       await registry.reload();
       expect(registry.getAll()).toHaveLength(1);
 
       const resource2 = createMockResource('test2', 'Test 2');
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([resource2]);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([
+        resource2,
+      ]);
 
       await registry.reload();
       expect(registry.getAll()).toHaveLength(1);
@@ -90,7 +98,9 @@ describe('InMemoryResourceRegistry', () => {
         createMockResource('test2', 'Test 2'),
       ];
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(resources);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(
+        resources
+      );
 
       await registry.reload();
 
@@ -106,7 +116,9 @@ describe('InMemoryResourceRegistry', () => {
         createMockResource('test3', 'Test 3'),
       ];
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(resources);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(
+        resources
+      );
       await registry.reload();
 
       const all = registry.getAll();
@@ -129,22 +141,24 @@ describe('InMemoryResourceRegistry', () => {
         createMockResource('docs', 'Documentation'),
       ];
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(resources);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(
+        resources
+      );
       await registry.reload();
     });
 
     it('should return resources matching prefix', () => {
       const results = registry.getByPrefix('tests');
       expect(results).toHaveLength(3);
-      expect(results.every(r => r.id.startsWith('tests'))).toBe(true);
+      expect(results.every((r) => r.id.startsWith('tests'))).toBe(true);
     });
 
     it('should return exact match and children when ID equals prefix', () => {
       const results = registry.getByPrefix('docs');
       // Should return 'docs' and 'docs|api'
       expect(results).toHaveLength(2);
-      expect(results.some(r => r.id === 'docs')).toBe(true);
-      expect(results.some(r => r.id === 'docs|api')).toBe(true);
+      expect(results.some((r) => r.id === 'docs')).toBe(true);
+      expect(results.some((r) => r.id === 'docs|api')).toBe(true);
     });
 
     it('should be case insensitive', () => {
@@ -171,7 +185,9 @@ describe('InMemoryResourceRegistry', () => {
         createMockResource('test2', 'Test 2'),
       ];
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(resources);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(
+        resources
+      );
       await registry.reload();
     });
 
@@ -208,7 +224,9 @@ describe('InMemoryResourceRegistry', () => {
       resources[2].description = 'Optimization techniques for better performance';
       resources[2].whenToLoad = 'When optimizing code performance';
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(resources);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue(
+        resources
+      );
       await registry.reload();
     });
 
@@ -255,7 +273,9 @@ describe('InMemoryResourceRegistry', () => {
       const resource = createMockResource('test4', 'C++ Programming');
       resource.description = 'Learn C++ programming';
 
-      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([resource]);
+      (mockLoader.loadAll as jest.MockedFunction<typeof mockLoader.loadAll>).mockResolvedValue([
+        resource,
+      ]);
       await registry.reload();
 
       // "C++" doesn't match as a whole word because + is a word boundary

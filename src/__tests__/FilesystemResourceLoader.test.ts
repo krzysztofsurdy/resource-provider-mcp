@@ -60,9 +60,15 @@ describe('FilesystemResourceLoader', () => {
 
       loader = new FilesystemResourceLoader([mockParser1, mockParser2, mockParser3]);
 
-      (mockParser1.parse as jest.MockedFunction<typeof mockParser1.parse>).mockResolvedValue([resource1]);
-      (mockParser2.parse as jest.MockedFunction<typeof mockParser2.parse>).mockResolvedValue([resource2]);
-      (mockParser3.parse as jest.MockedFunction<typeof mockParser3.parse>).mockResolvedValue([resource3]);
+      (mockParser1.parse as jest.MockedFunction<typeof mockParser1.parse>).mockResolvedValue([
+        resource1,
+      ]);
+      (mockParser2.parse as jest.MockedFunction<typeof mockParser2.parse>).mockResolvedValue([
+        resource2,
+      ]);
+      (mockParser3.parse as jest.MockedFunction<typeof mockParser3.parse>).mockResolvedValue([
+        resource3,
+      ]);
 
       const results = await loader.loadAll('/test/path');
 
@@ -77,7 +83,9 @@ describe('FilesystemResourceLoader', () => {
 
       loader = new FilesystemResourceLoader([mockParser1, mockParser2]);
 
-      (mockParser1.parse as jest.MockedFunction<typeof mockParser1.parse>).mockResolvedValue([resource1]);
+      (mockParser1.parse as jest.MockedFunction<typeof mockParser1.parse>).mockResolvedValue([
+        resource1,
+      ]);
       (mockParser2.parse as jest.MockedFunction<typeof mockParser2.parse>).mockResolvedValue([]);
 
       const results = await loader.loadAll('/test/path');
@@ -119,9 +127,15 @@ describe('FilesystemResourceLoader', () => {
 
       loader = new FilesystemResourceLoader([mockParser1, mockParser2, mockParser3]);
 
-      (mockParser1.parse as jest.MockedFunction<typeof mockParser1.parse>).mockResolvedValue([resource1]);
-      (mockParser2.parse as jest.MockedFunction<typeof mockParser2.parse>).mockResolvedValue([resource2]);
-      (mockParser3.parse as jest.MockedFunction<typeof mockParser3.parse>).mockResolvedValue([resource3]);
+      (mockParser1.parse as jest.MockedFunction<typeof mockParser1.parse>).mockResolvedValue([
+        resource1,
+      ]);
+      (mockParser2.parse as jest.MockedFunction<typeof mockParser2.parse>).mockResolvedValue([
+        resource2,
+      ]);
+      (mockParser3.parse as jest.MockedFunction<typeof mockParser3.parse>).mockResolvedValue([
+        resource3,
+      ]);
 
       const results = await loader.loadAll('/test/path');
 

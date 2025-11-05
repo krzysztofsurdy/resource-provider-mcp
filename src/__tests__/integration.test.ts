@@ -57,9 +57,7 @@ describe('Integration Tests with Example Resources', () => {
   });
 
   it('should parse file-level metadata from markdown files', async () => {
-    const loader = new FilesystemResourceLoader([
-      new MarkdownCommentMetadataParser(),
-    ]);
+    const loader = new FilesystemResourceLoader([new MarkdownCommentMetadataParser()]);
 
     registry = new InMemoryResourceRegistry(examplesDir, loader, mockLogger);
     await registry.reload();
@@ -80,14 +78,14 @@ describe('Integration Tests with Example Resources', () => {
     // file-with-both-comments.md has top-level metadata
     const bothCommentsFile = registry.getById('examples|file_with_both_comments');
     expect(bothCommentsFile).toBeDefined();
-    expect(bothCommentsFile?.description).toBe('File with both top-level and section-level metadata');
+    expect(bothCommentsFile?.description).toBe(
+      'File with both top-level and section-level metadata'
+    );
     expect(bothCommentsFile?.importance).toBe('high');
   });
 
   it('should parse sections from markdown files', async () => {
-    const loader = new FilesystemResourceLoader([
-      new MarkdownSectionParser(),
-    ]);
+    const loader = new FilesystemResourceLoader([new MarkdownSectionParser()]);
 
     registry = new InMemoryResourceRegistry(examplesDir, loader, mockLogger);
     await registry.reload();
@@ -95,11 +93,11 @@ describe('Integration Tests with Example Resources', () => {
     const all = registry.getAll();
 
     // Should have sections from all markdown files
-    const sections = all.filter(r => r.type === 'section');
+    const sections = all.filter((r) => r.type === 'section');
     expect(sections.length).toBeGreaterThan(0);
 
     // Check that section IDs include the context and filename
-    const fileSections = sections.filter(s => s.id.includes('examples|getting_started'));
+    const fileSections = sections.filter((s) => s.id.includes('examples|getting_started'));
     expect(fileSections.length).toBeGreaterThan(0);
   });
 
@@ -123,9 +121,7 @@ describe('Integration Tests with Example Resources', () => {
   });
 
   it('should handle files with different metadata patterns', async () => {
-    const loader = new FilesystemResourceLoader([
-      new MarkdownCommentMetadataParser(),
-    ]);
+    const loader = new FilesystemResourceLoader([new MarkdownCommentMetadataParser()]);
 
     registry = new InMemoryResourceRegistry(examplesDir, loader, mockLogger);
     await registry.reload();
@@ -133,17 +129,17 @@ describe('Integration Tests with Example Resources', () => {
     const all = registry.getAll();
 
     // File with top comment only
-    const topOnly = all.find(r => r.name === 'file-with-top-comment');
+    const topOnly = all.find((r) => r.name === 'file-with-top-comment');
     expect(topOnly).toBeDefined();
     expect(topOnly?.description).toBeDefined();
 
     // File with both comments - should have file-level metadata
-    const both = all.find(r => r.name === 'file-with-both-comments');
+    const both = all.find((r) => r.name === 'file-with-both-comments');
     expect(both).toBeDefined();
     expect(both?.description).toBeDefined();
 
     // File with no comments should not be loaded by MarkdownCommentMetadataParser
-    const noComments = all.find(r => r.name === 'file-with-no-comments');
+    const noComments = all.find((r) => r.name === 'file-with-no-comments');
     expect(noComments).toBeUndefined();
   });
 
@@ -160,15 +156,15 @@ describe('Integration Tests with Example Resources', () => {
     const all = registry.getAll();
 
     // Should have context-level resources (from JSON parser)
-    const contexts = all.filter(r => r.type === 'context');
+    const contexts = all.filter((r) => r.type === 'context');
     expect(contexts.length).toBeGreaterThan(0);
 
     // Should have file-level resources (from MarkdownComment parser)
-    const files = all.filter(r => r.type === 'file');
+    const files = all.filter((r) => r.type === 'file');
     expect(files.length).toBeGreaterThan(0);
 
     // Should have section-level resources (from MarkdownSection parser)
-    const sections = all.filter(r => r.type === 'section');
+    const sections = all.filter((r) => r.type === 'section');
     expect(sections.length).toBeGreaterThan(0);
   });
 
@@ -185,12 +181,16 @@ describe('Integration Tests with Example Resources', () => {
     const all = registry.getAll();
 
     // Should find the nested-context parent with hierarchical ID
-    const nestedContext = all.find(r => r.id === 'examples|nested_context' && r.type === 'context');
+    const nestedContext = all.find(
+      (r) => r.id === 'examples|nested_context' && r.type === 'context'
+    );
     expect(nestedContext).toBeDefined();
     expect(nestedContext?.name).toBe('nested-context');
 
     // Should find the file in the subdir (which has no resource.json)
-    const nestedFile = all.find(r => r.id === 'examples|nested_context|nested_file' && r.type === 'file');
+    const nestedFile = all.find(
+      (r) => r.id === 'examples|nested_context|nested_file' && r.type === 'file'
+    );
     expect(nestedFile).toBeDefined();
     expect(nestedFile?.name).toBe('nested-file');
     expect(nestedFile?.description).toBe('File in subdirectory without its own resource.json');

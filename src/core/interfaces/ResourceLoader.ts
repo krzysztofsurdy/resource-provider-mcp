@@ -1,5 +1,5 @@
 import { Resource } from './Resource';
 
 export interface ResourceLoader {
-    loadAll(path: string): Promise<Resource[]>;
+  loadAll(path: string): Promise<Resource[]>;
 }

@@ -89,7 +89,9 @@ async function main() {
       console.log(`\nFound: ${parsed.length} resources`);
     } else {
       console.error(`Unknown tool: ${toolName}`);
-      console.error('\nAvailable tools: getAvailableResources, getResourceContent, findResourceByPhrases');
+      console.error(
+        '\nAvailable tools: getAvailableResources, getResourceContent, findResourceByPhrases'
+      );
       process.exit(1);
     }
   } catch (error) {
