@@ -1,0 +1,6 @@
+package-lock.json
+node_modules
+dist
+.claude
+.DS_Store
+.idea

@@ -1,0 +1,20 @@
+{
+  "name": "resource-provider-mcp",
+  "version": "1.0.0",
+  "description": "Resource Provider MCP server - provides hierarchical resources from markdown files with metadata.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "typescript": "^5.6.3"
+  },
+  "license": "MIT"
+}

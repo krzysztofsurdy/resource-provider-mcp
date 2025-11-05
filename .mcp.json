@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/mcp-schema.json",
+
+  "metadata": {
+    "name": "context-catalog-mcp",
+    "description": "An MCP server that provides structured contextual resources (contexts, files, and sections) from Markdown and JSON files for AI reasoning.",
+    "author": "Krzysztof Surdy",
+    "license": "MIT",
+    "version": "1.0.0",
+    "homepage": "https://github.com/krzysztofsurdy/context-catalog-mcp"
+  },
+
+  "tools": {
+    "getAvailableResources": {
+      "description": "Lists all available resources, optionally filtered by prefix ID (e.g. 'tests|testing').",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "prefix": { "type": "string" }
+        },
+        "required": []
+      },
+      "outputSchema": { "type": "string" }
+    },
+    "getResourceContent": {
+      "description": "Retrieves the full content of a resource and optionally its children.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "showChildren": { "type": "boolean" }
+        },
+        "required": ["id"]
+      },
+      "outputSchema": { "type": "string" }
+    },
+    "findResourceByPhrases": {
+      "description": "Searches for resources by phrases (case-insensitive whole-word match).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "phrases": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          }
+        },
+        "required": ["phrases"]
+      },
+      "outputSchema": { "type": "string" }
+    }
+  }
+}
