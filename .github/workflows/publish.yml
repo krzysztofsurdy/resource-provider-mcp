@@ -1,8 +1,9 @@
 name: Publish MCP to npm
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "*.*.*"
 
 jobs:
   publish:

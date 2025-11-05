@@ -26,10 +26,21 @@ This MCP separates discovery from retrieval. List resources with metadata first,
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/resource-provider-mcp
-cd resource-provider-mcp
-npm install
-npm run build
+npx resource-provider-mcp
+```
+
+or you can register it as mcp directly in your config.
+
+```json
+{
+  "mcpServers": {
+    "resource-provider": {
+      "command": "npx",
+      "args": ["resource-provider-mcp"],
+      "workingDirectory": "."
+    }
+  }
+}
 ```
 
 ## Setting Up Your Documentation
@@ -170,32 +181,6 @@ docs/
 
 The `api` directory is a nested context. Its ID will be `docs|api`. The auth file will be `docs|api|auth`.
 
-## Connecting to Claude Desktop
-
-Add this to your Claude Desktop config file:
-
-On macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-On Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "resource-provider": {
-      "command": "node",
-      "args": ["/absolute/path/to/resource-provider-mcp/dist/index.js"],
-      "env": {
-        "RESOURCE_BASE_DIR": "/absolute/path/to/your/docs"
-      }
-    }
-  }
-}
-```
-
-Replace the paths with actual absolute paths on your system.
-
-Restart Claude Desktop. The MCP should connect automatically.
-
 ## Testing Your Setup
 
 After building, test the tools directly:
@@ -252,7 +237,7 @@ The TypeScript source is in `src/`, compiled output goes to `dist/`.
 
 ## How the LLM Uses This
 
-Once connected, Claude can use three tools:
+Once connected, CodeGen Agent can use three tools:
 
 ### List Resources
 
@@ -260,7 +245,7 @@ Once connected, Claude can use three tools:
 getAvailableResources with no arguments
 ```
 
-Shows the full hierarchy with metadata but no content. Claude can see what exists and decide what to load.
+Shows the full hierarchy with metadata but no content. CodeGen Agent can see what exists and decide what to load.
 
 ### Search Resources
 
@@ -287,13 +272,11 @@ The MCP server:
 4. Builds a hierarchical catalog with IDs like `context|file|section`
 5. Exposes three tools for listing, searching, and loading resources
 
-When Claude calls a tool, the server returns just what was requested. Listing shows metadata only, loading shows content.
+When CodeGen Agent calls a tool, the server returns just what was requested. Listing shows metadata only, loading shows content.
 
 ## Troubleshooting
 
 ### MCP Not Connecting
-
-Check the Claude Desktop logs. On macOS: `~/Library/Logs/Claude/mcp*.log`
 
 Common issues:
 - Wrong path to dist/index.js
