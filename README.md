@@ -23,9 +23,7 @@ Direct filesystem access means the LLM has to guess which files to read. It list
 
 This MCP separates discovery from retrieval. List resources with metadata first, then load only what matters.
 
-## Quick Start
-
-### Installation
+## Installation
 
 ```bash
 git clone https://github.com/yourusername/resource-provider-mcp
@@ -33,32 +31,6 @@ cd resource-provider-mcp
 npm install
 npm run build
 ```
-
-### Connect to Claude Desktop
-
-Add this to your Claude Desktop config file:
-
-On macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-On Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "resource-provider": {
-      "command": "node",
-      "args": ["/absolute/path/to/resource-provider-mcp/dist/index.js"],
-      "env": {
-        "RESOURCE_BASE_DIR": "/absolute/path/to/your/docs"
-      }
-    }
-  }
-}
-```
-
-Replace the paths with actual absolute paths on your system.
-
-Restart Claude Desktop. The MCP should connect automatically.
 
 ## Setting Up Your Documentation
 
@@ -138,47 +110,17 @@ importance: high
 OAuth setup requires...
 ```
 
-Section metadata overrides file metadata, which overrides context metadata.
-
 ### Metadata Fields
 
 All fields are optional:
 
 - `description`: Brief description of what this contains
-- `whenToLoad`: When the LLM should load this resource
-- `importance`: `low`, `mid`, or `high` (guides loading priority)
+- `whenToLoad`: When the LLM should load this resource (can also use lowercase `whentoload`)
+- `importance`: `low`, `mid`, or `high` (guides loading priority, can also use `priority`)
 
-You can also use `whentoload` (lowercase) or `priority` instead of `importance`.
+Metadata precedence: section > file > context (more specific overrides less specific).
 
-## How the LLM Uses This
-
-Once connected, Claude can use three tools:
-
-### List Resources
-
-```
-getAvailableResources with no arguments
-```
-
-Shows the full hierarchy with metadata but no content. Claude can see what exists and decide what to load.
-
-### Search Resources
-
-```
-findResourceByPhrases with phrases: ["authentication", "oauth"]
-```
-
-Finds resources matching those keywords. Search is whole-word and case-insensitive.
-
-### Load Content
-
-```
-getResourceContent with id: "api|authentication|oauth_setup"
-```
-
-Loads just that section. IDs use pipe delimiters to show hierarchy.
-
-## File Structure Example
+### File Structure Example
 
 Here's a complete example:
 
@@ -205,20 +147,6 @@ This creates IDs like:
 - `guides|quickstart` (file)
 - `internal|architecture` (file)
 
-## Configuration
-
-### Environment Variables
-
-`RESOURCE_BASE_DIR`: Required. Points to your docs directory.
-
-Example:
-```bash
-export RESOURCE_BASE_DIR=/Users/you/Documents/my-docs
-node dist/index.js
-```
-
-Or set it in the MCP config as shown above.
-
 ### What Gets Included
 
 The MCP only exposes:
@@ -241,6 +169,32 @@ docs/
 ```
 
 The `api` directory is a nested context. Its ID will be `docs|api`. The auth file will be `docs|api|auth`.
+
+## Connecting to Claude Desktop
+
+Add this to your Claude Desktop config file:
+
+On macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+On Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "resource-provider": {
+      "command": "node",
+      "args": ["/absolute/path/to/resource-provider-mcp/dist/index.js"],
+      "env": {
+        "RESOURCE_BASE_DIR": "/absolute/path/to/your/docs"
+      }
+    }
+  }
+}
+```
+
+Replace the paths with actual absolute paths on your system.
+
+Restart Claude Desktop. The MCP should connect automatically.
 
 ## Testing Your Setup
 
@@ -277,6 +231,64 @@ These commands use the tools directly without going through MCP, useful for debu
 
 6. **Use descriptive headings**: Section names become part of the ID. "OAuth Setup" is better than "Setup".
 
+## Development
+
+Run tests:
+```bash
+npm test
+```
+
+Watch mode:
+```bash
+npm run test:watch
+```
+
+Build:
+```bash
+npm run build
+```
+
+The TypeScript source is in `src/`, compiled output goes to `dist/`.
+
+## How the LLM Uses This
+
+Once connected, Claude can use three tools:
+
+### List Resources
+
+```
+getAvailableResources with no arguments
+```
+
+Shows the full hierarchy with metadata but no content. Claude can see what exists and decide what to load.
+
+### Search Resources
+
+```
+findResourceByPhrases with phrases: ["authentication", "oauth"]
+```
+
+Finds resources matching those keywords. Search is whole-word and case-insensitive.
+
+### Load Content
+
+```
+getResourceContent with id: "api|authentication|oauth_setup"
+```
+
+Loads just that section. IDs use pipe delimiters to show hierarchy.
+
+## How It Works
+
+The MCP server:
+1. Scans your docs directory for `resource.json` files (contexts)
+2. Finds all `.md` files in those directories
+3. Parses metadata comments from files and sections
+4. Builds a hierarchical catalog with IDs like `context|file|section`
+5. Exposes three tools for listing, searching, and loading resources
+
+When Claude calls a tool, the server returns just what was requested. Listing shows metadata only, loading shows content.
+
 ## Troubleshooting
 
 ### MCP Not Connecting
@@ -311,36 +323,6 @@ Remember:
 - Search is whole-word only. "config" won't match "configuration"
 - All phrases must match
 - Search is case-insensitive
-
-## Development
-
-Run tests:
-```bash
-npm test
-```
-
-Watch mode:
-```bash
-npm run test:watch
-```
-
-Build:
-```bash
-npm run build
-```
-
-The TypeScript source is in `src/`, compiled output goes to `dist/`.
-
-## How It Works
-
-The MCP server:
-1. Scans your docs directory for `resource.json` files (contexts)
-2. Finds all `.md` files in those directories
-3. Parses metadata comments from files and sections
-4. Builds a hierarchical catalog with IDs like `context|file|section`
-5. Exposes three tools for listing, searching, and loading resources
-
-When Claude calls a tool, the server returns just what was requested. Listing shows metadata only, loading shows content.
 
 ## License
 
