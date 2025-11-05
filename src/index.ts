@@ -13,206 +13,179 @@ import { MarkdownSectionParser } from "./services/parsers/MarkdownSectionParser.
 import { InMemoryResourceRegistry } from "./services/InMemoryResourceRegistry.js";
 import { ConsoleLogger } from "./services/ConsoleLogger.js";
 import { getConfig } from "./config/config.js";
+import { GetAvailableResourcesTool } from "./tools/getAvailableResources.js";
+import { GetResourceContentTool } from "./tools/getResourceContent.js";
+import { FindResourceByPhrasesTool } from "./tools/findResourceByPhrases.js";
 
-const logger = new ConsoleLogger();
-const config = getConfig();
+async function main(): Promise<void> {
+  const logger = new ConsoleLogger();
 
-const loader = new FilesystemResourceLoader([
-  new JsonResourceMetadataParser(),
-  new MarkdownCommentMetadataParser(),
-  new MarkdownSectionParser(),
-]);
-
-const registry = new InMemoryResourceRegistry(config.baseDir, loader, logger);
-
-await registry.reload();
-
-const server = new Server(
-  { name: "resource-provider-mcp", version: "1.0.0" },
-  { capabilities: { tools: {} } }
-);
-
-const GetAvailableResourcesSchema = z.object({
-  prefix: z.string().optional(),
-});
-
-const GetResourceContentSchema = z.object({
-  id: z.string(),
-  showChildren: z.boolean().optional(),
-});
-
-const FindResourceByPhrasesSchema = z.object({
-  phrases: z.array(z.string()).min(1),
-});
-
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    {
-      name: "getAvailableResources",
-      description:
-        "List all resources (formatted). Optional prefix to narrow by id prefix like 'tests|testing'. Content is not included.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          prefix: {
-            type: "string",
-            description: "Optional ID prefix to filter resources",
-          },
-        },
-      },
-    },
-    {
-      name: "getResourceContent",
-      description: "Retrieves the full content of a resource and optionally its children.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id: {
-            type: "string",
-            description: "Resource ID",
-          },
-          showChildren: {
-            type: "boolean",
-            description: "Include children in output",
-          },
-        },
-        required: ["id"],
-      },
-    },
-    {
-      name: "findResourceByPhrases",
-      description:
-        "Searches for resources by phrases (case-insensitive whole-word match).",
-      inputSchema: {
-        type: "object",
-        properties: {
-          phrases: {
-            type: "array",
-            items: { type: "string" },
-            description: "Array of search phrases",
-          },
-        },
-        required: ["phrases"],
-      },
-    },
-  ],
-}));
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  let config;
   try {
-    if (request.params.name === "getAvailableResources") {
-      const args = GetAvailableResourcesSchema.parse(request.params.arguments);
-      const items = args.prefix
-        ? registry.getByPrefix(args.prefix)
-        : registry.getAll();
+    config = getConfig();
+  } catch (error) {
+    logger.error('Failed to load configuration', { error });
+    process.exit(1);
+  }
 
-      const formatted = JSON.stringify(
-        items.map((r) => ({
-          id: r.id,
-          name: r.name,
-          type: r.type,
-          description: r.description ?? null,
-          whenToLoad: r.whenToLoad ?? null,
-          importance: r.importance ?? null,
-          childrenCount: r.children.length,
-        })),
-        null,
-        2
-      );
+  const loader = new FilesystemResourceLoader([
+    new JsonResourceMetadataParser(),
+    new MarkdownCommentMetadataParser(),
+    new MarkdownSectionParser(),
+  ]);
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: formatted,
+  const registry = new InMemoryResourceRegistry(config.baseDir, loader, logger);
+
+  try {
+    await registry.reload();
+  } catch (error) {
+    logger.error('Failed to load resources', { error });
+    process.exit(1);
+  }
+
+  const getAvailableResourcesTool = new GetAvailableResourcesTool(registry);
+  const getResourceContentTool = new GetResourceContentTool(registry);
+  const findResourceByPhrasesTool = new FindResourceByPhrasesTool(registry);
+
+  const server = new Server(
+    { name: "resource-provider-mcp", version: "1.0.0" },
+    { capabilities: { tools: {} } }
+  );
+
+  const GetAvailableResourcesSchema = z.object({
+    prefix: z.string().optional(),
+  });
+
+  const GetResourceContentSchema = z.object({
+    id: z.string(),
+    showChildren: z.boolean().optional(),
+  });
+
+  const FindResourceByPhrasesSchema = z.object({
+    phrases: z.array(z.string()).min(1),
+  });
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: [
+      {
+        name: "getAvailableResources",
+        description:
+          "List all resources (formatted). Optional prefix to narrow by id prefix like 'tests|testing'. Content is not included.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            prefix: {
+              type: "string",
+              description: "Optional ID prefix to filter resources",
+            },
           },
-        ],
-      };
-    }
+        },
+      },
+      {
+        name: "getResourceContent",
+        description: "Retrieves the full content of a resource and optionally its children.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "Resource ID",
+            },
+            showChildren: {
+              type: "boolean",
+              description: "Include children in output",
+            },
+          },
+          required: ["id"],
+        },
+      },
+      {
+        name: "findResourceByPhrases",
+        description:
+          "Searches for resources by phrases (case-insensitive whole-word match).",
+        inputSchema: {
+          type: "object",
+          properties: {
+            phrases: {
+              type: "array",
+              items: { type: "string" },
+              description: "Array of search phrases",
+            },
+          },
+          required: ["phrases"],
+        },
+      },
+    ],
+  }));
 
-    if (request.params.name === "getResourceContent") {
-      const args = GetResourceContentSchema.parse(request.params.arguments);
-      const resource = registry.getById(args.id);
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    try {
+      if (request.params.name === "getAvailableResources") {
+        const args = GetAvailableResourcesSchema.parse(request.params.arguments);
+        const formatted = await getAvailableResourcesTool.execute(args);
 
-      if (!resource) {
         return {
           content: [
             {
               type: "text",
-              text: `Resource '${args.id}' not found.`,
+              text: formatted,
             },
           ],
-          isError: true,
         };
       }
 
-      let output = `# ${resource.name}\n\n`;
-      if (resource.description) output += `**Description:** ${resource.description}\n\n`;
-      if (resource.whenToLoad) output += `**When to load:** ${resource.whenToLoad}\n\n`;
-      if (resource.content) output += `\n${resource.content}\n`;
+      if (request.params.name === "getResourceContent") {
+        const args = GetResourceContentSchema.parse(request.params.arguments);
+        const result = await getResourceContentTool.execute(args);
 
-      if (args.showChildren && resource.children.length > 0) {
-        output += `\n## Children (${resource.children.length})\n\n`;
-        for (const child of resource.children) {
-          output += `### ${child.name} (${child.id})\n`;
-          if (child.description) output += `${child.description}\n`;
-          output += `\n`;
-        }
+        return {
+          content: [
+            {
+              type: "text",
+              text: result.text,
+            },
+          ],
+          isError: result.isError,
+        };
       }
 
+      if (request.params.name === "findResourceByPhrases") {
+        const args = FindResourceByPhrasesSchema.parse(request.params.arguments);
+        const formatted = await findResourceByPhrasesTool.execute(args);
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: formatted,
+            },
+          ],
+        };
+      }
+
+      throw new Error(`Unknown tool: ${request.params.name}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Tool execution error', { tool: request.params.name, error: errorMessage });
       return {
         content: [
           {
             type: "text",
-            text: output,
+            text: `Error: ${errorMessage}`,
           },
         ],
+        isError: true,
       };
     }
+  });
 
-    if (request.params.name === "findResourceByPhrases") {
-      const args = FindResourceByPhrasesSchema.parse(request.params.arguments);
-      const results = registry.searchByPhrases(args.phrases);
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
 
-      const formatted = JSON.stringify(
-        results.map((r) => ({
-          id: r.id,
-          name: r.name,
-          type: r.type,
-          description: r.description ?? null,
-          whenToLoad: r.whenToLoad ?? null,
-          importance: r.importance ?? null,
-        })),
-        null,
-        2
-      );
+  logger.info("Resource Provider MCP server running via stdio");
+}
 
-      return {
-        content: [
-          {
-            type: "text",
-            text: formatted,
-          },
-        ],
-      };
-    }
-
-    throw new Error(`Unknown tool: ${request.params.name}`);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error: ${errorMessage}`,
-        },
-      ],
-      isError: true,
-    };
-  }
+main().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
 });
-
-const transport = new StdioServerTransport();
-await server.connect(transport);
-
-logger.info("Resource Provider MCP server running via stdio");

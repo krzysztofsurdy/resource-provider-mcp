@@ -5,15 +5,22 @@ import { ResourceLoader } from '../core/interfaces/ResourceLoader';
 import { Logger } from '../core/interfaces/Logger';
 
 export class InMemoryResourceRegistry implements ResourceRegistry {
-    private map = new Map<string, Resource>();
-    private baseDir: string;
+    private readonly map = new Map<string, Resource>();
+    private readonly baseDir: string;
+    private readonly loader: ResourceLoader;
+    private readonly logger: Logger;
 
     constructor(
         baseDir: string,
-        private loader: ResourceLoader,
-        private logger: Logger
+        loader: ResourceLoader,
+        logger: Logger
     ) {
+        if (!baseDir) {
+            throw new Error('baseDir is required');
+        }
         this.baseDir = path.resolve(baseDir);
+        this.loader = loader;
+        this.logger = logger;
     }
 
     async reload(): Promise<void> {
@@ -33,24 +40,45 @@ export class InMemoryResourceRegistry implements ResourceRegistry {
     }
 
     getByPrefix(prefix: string): Resource[] {
-        const p = prefix.toLowerCase();
-        return Array.from(this.map.values()).filter(r => r.id.toLowerCase().startsWith(p + '|') || r.id.toLowerCase() === p);
+        if (!prefix) {
+            return [];
+        }
+        const normalizedPrefix = prefix.toLowerCase();
+        return Array.from(this.map.values()).filter(r => {
+            const normalizedId = r.id.toLowerCase();
+            return normalizedId.startsWith(normalizedPrefix + '|') || normalizedId === normalizedPrefix;
+        });
     }
 
     getById(id: string): Resource | undefined {
+        if (!id) {
+            return undefined;
+        }
         return this.map.get(id);
     }
 
     searchByPhrases(phrases: string[]): Resource[] {
-        const res: Resource[] = [];
-        const regs = phrases.map(ph => {
-            const safe = ph.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return new RegExp(`\\b${safe}\\b`, 'i');
-        });
-        for (const r of this.map.values()) {
-            const hay = `${r.name}\n${r.description ?? ''}\n${r.whenToLoad ?? ''}`;
-            if (regs.some(re => re.test(hay))) res.push(r);
+        if (!phrases || phrases.length === 0) {
+            return [];
         }
-        return res;
+
+        const results: Resource[] = [];
+        const regexPatterns = phrases.map(phrase => {
+            const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return new RegExp(`\\b${escapedPhrase}\\b`, 'i');
+        });
+
+        for (const resource of this.map.values()) {
+            const searchableText = [
+                resource.name,
+                resource.description ?? '',
+                resource.whenToLoad ?? ''
+            ].join('\n');
+
+            if (regexPatterns.some(regex => regex.test(searchableText))) {
+                results.push(resource);
+            }
+        }
+        return results;
     }
 }

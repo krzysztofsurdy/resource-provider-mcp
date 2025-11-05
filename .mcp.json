@@ -2,12 +2,12 @@
   "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/mcp-schema.json",
 
   "metadata": {
-    "name": "context-catalog-mcp",
+    "name": "resource-provider-mcp",
     "description": "An MCP server that provides structured contextual resources (contexts, files, and sections) from Markdown and JSON files for AI reasoning.",
     "author": "Krzysztof Surdy",
     "license": "MIT",
     "version": "1.0.0",
-    "homepage": "https://github.com/krzysztofsurdy/context-catalog-mcp"
+    "homepage": "https://github.com/krzysztofsurdy/resource-provider-mcp"
   },
 
   "tools": {

@@ -1,0 +1,5 @@
+{
+  "description": "Second root-level context for testing multiple contexts",
+  "whenToLoad": "When you want to see multiple root contexts",
+  "importance": "low"
+}

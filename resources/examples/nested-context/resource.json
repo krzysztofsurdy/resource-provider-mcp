@@ -1,0 +1,5 @@
+{
+  "description": "Parent context with nested subdirectories",
+  "whenToLoad": "When testing nested directory structures",
+  "importance": "mid"
+}

@@ -5,12 +5,56 @@ import { Resource } from "../../core/interfaces/Resource";
 
 export class MarkdownSectionParser implements ResourceParser {
     private readonly HEADING_RE = /^(#{1,6})\s+(.+?)\s*$/gm;
+    private readonly MAX_DEPTH = 10;
 
-    async parse(inputPath: string): Promise<Resource[]> {
-        if (!inputPath.endsWith(".md") || !fs.existsSync(inputPath)) return [];
+    async parse(inputPath: string, depth = 0, contextPrefix = ''): Promise<Resource[]> {
+        if (!fs.existsSync(inputPath)) return [];
+        if (depth > this.MAX_DEPTH) return [];
 
-        const text = fs.readFileSync(inputPath, "utf8");
+        let stats;
+        try {
+            stats = fs.statSync(inputPath);
+        } catch (error) {
+            console.error(`Failed to stat ${inputPath}:`, error);
+            return [];
+        }
+
+        if (stats.isDirectory()) {
+            const results: Resource[] = [];
+
+            const resourceJsonPath = path.join(inputPath, 'resource.json');
+            let newContextPrefix = contextPrefix;
+            if (fs.existsSync(resourceJsonPath)) {
+                const dirName = path.basename(inputPath);
+                const contextId = this.slugify(dirName);
+                newContextPrefix = contextPrefix ? `${contextPrefix}|${contextId}` : contextId;
+            }
+
+            try {
+                const entries = fs.readdirSync(inputPath);
+                for (const entry of entries) {
+                    const fullPath = path.join(inputPath, entry);
+                    const parsed = await this.parse(fullPath, depth + 1, newContextPrefix);
+                    results.push(...parsed);
+                }
+            } catch (error) {
+                console.error(`Failed to read directory ${inputPath}:`, error);
+            }
+            return results;
+        }
+
+        if (!inputPath.endsWith(".md")) return [];
+
+        let text: string;
+        try {
+            text = fs.readFileSync(inputPath, "utf8");
+        } catch (error) {
+            console.error(`Failed to read file ${inputPath}:`, error);
+            return [];
+        }
         const fileName = path.basename(inputPath, ".md");
+        const fileId = this.slugify(fileName);
+        const fileFullId = contextPrefix ? `${contextPrefix}|${fileId}` : fileId;
         const sections: Resource[] = [];
 
         let lastIndex = 0;
@@ -23,9 +67,10 @@ export class MarkdownSectionParser implements ResourceParser {
             const start = match.index ?? 0;
             const end = i + 1 < matches.length ? (matches[i + 1].index ?? text.length) : text.length;
             const body = text.slice(start, end).trim();
+            const sectionId = this.slugify(title);
 
             sections.push({
-                id: this.slugify(`${fileName}|${title}`),
+                id: `${fileFullId}|${sectionId}`,
                 name: title,
                 type: "section",
                 description: undefined,
