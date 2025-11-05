@@ -43,6 +43,10 @@ or you can register it as mcp directly in your config.
 }
 ```
 
+### Configuration
+Set the `MCP_RESOURCES_DIR` environment variable to point to your documentation root directory.
+This should be an absolute path.
+
 ## Setting Up Your Documentation
 
 This MCP organizes docs in three levels: context (directory), file, and section (heading). Each level can have metadata.
