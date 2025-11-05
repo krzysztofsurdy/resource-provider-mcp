@@ -1,5 +1,10 @@
 # resource-provider-mcp
 
+[![TypeCheck](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/typecheck.yml/badge.svg)](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/typecheck.yml)
+[![Lint](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/lint.yml/badge.svg)](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/lint.yml)
+[![Format](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/format.yml/badge.svg)](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/format.yml)
+[![Tests](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/krzysztofsurdy/resource-provider-mcp/actions/workflows/tests.yml)
+
 An MCP server that gives LLMs structured access to your Markdown documentation. Instead of browsing raw files, LLMs get a hierarchical catalog where each resource has metadata telling them what it contains and when to load it.
 
 ## Why This Exists
