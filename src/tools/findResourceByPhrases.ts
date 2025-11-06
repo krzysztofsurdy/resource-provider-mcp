@@ -6,8 +6,18 @@ export class FindResourceByPhrasesTool {
   async execute(args: { phrases: string[] }): Promise<string> {
     const results = this.registry.searchByPhrases(args.phrases);
 
+    // Deduplicate by ID (keep first occurrence)
+    const seenIds = new Set<string>();
+    const uniqueResults = results.filter((r) => {
+      if (seenIds.has(r.id)) {
+        return false;
+      }
+      seenIds.add(r.id);
+      return true;
+    });
+
     return JSON.stringify(
-      results.map((r) => ({
+      uniqueResults.map((r) => ({
         id: r.id,
         name: r.name,
         type: r.type,

@@ -1,5 +1,4 @@
 import { ResourceRegistry } from '../core/interfaces/ResourceRegistry.js';
-import { ResourceHierarchyBuilder } from '../services/ResourceHierarchyBuilder.js';
 import { Resource } from '../core/interfaces/Resource.js';
 
 interface SerializedResource {
@@ -9,7 +8,6 @@ interface SerializedResource {
   description: string | null;
   whenToLoad: string | null;
   importance: string | null;
-  children: SerializedResource[];
 }
 
 export class GetAvailableResourcesTool {
@@ -18,12 +16,18 @@ export class GetAvailableResourcesTool {
   async execute(args: { prefix?: string }): Promise<string> {
     const flatItems = args.prefix ? this.registry.getByPrefix(args.prefix) : this.registry.getAll();
 
-    // Build hierarchical structure
-    const hierarchyBuilder = new ResourceHierarchyBuilder();
-    const items = hierarchyBuilder.build(flatItems);
+    // Deduplicate by ID (keep first occurrence)
+    const seenIds = new Set<string>();
+    const uniqueItems = flatItems.filter((r) => {
+      if (seenIds.has(r.id)) {
+        return false;
+      }
+      seenIds.add(r.id);
+      return true;
+    });
 
     return JSON.stringify(
-      items.map((r) => this.serializeResource(r)),
+      uniqueItems.map((r) => this.serializeResource(r)),
       null,
       2
     );
@@ -37,7 +41,6 @@ export class GetAvailableResourcesTool {
       description: r.description ?? null,
       whenToLoad: r.whenToLoad ?? null,
       importance: r.importance ?? null,
-      children: r.children.map((c) => this.serializeResource(c)),
     };
   }
 }

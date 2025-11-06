@@ -23,11 +23,16 @@ export class InMemoryResourceRegistry implements ResourceRegistry {
     this.map.clear();
     const list = await this.loader.loadAll(this.baseDir);
     const stack: Resource[] = [...list];
+
     while (stack.length) {
       const r = stack.pop()!;
+      if (this.map.has(r.id)) {
+        this.logger.warn('Duplicate resource ID detected, last one wins', { id: r.id });
+      }
       this.map.set(r.id, r);
       for (const c of r.children) stack.push(c);
     }
+
     this.logger.info('Registry reloaded', { count: this.map.size });
   }
 
