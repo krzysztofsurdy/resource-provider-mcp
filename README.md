@@ -44,8 +44,43 @@ or you can register it as mcp directly in your config.
 ```
 
 ### Configuration
+
 Set the `MCP_RESOURCES_DIR` environment variable to point to your documentation root directory.
-This should be an absolute path.
+
+You can use either absolute or relative paths:
+
+**Absolute path:**
+```json
+{
+  "mcpServers": {
+    "resource-provider": {
+      "command": "npx",
+      "args": ["-y", "resource-provider-mcp"],
+      "env": {
+        "MCP_RESOURCES_DIR": "/Users/you/projects/my-app/docs"
+      }
+    }
+  }
+}
+```
+
+**Relative path:**
+```json
+{
+  "mcpServers": {
+    "resource-provider": {
+      "command": "npx",
+      "args": ["-y", "resource-provider-mcp"],
+      "workingDirectory": "/Users/you/projects/my-app",
+      "env": {
+        "MCP_RESOURCES_DIR": "./docs"
+      }
+    }
+  }
+}
+```
+
+Relative paths are resolved from the current working directory. If you specify `workingDirectory`, relative paths are resolved from that directory.
 
 ## Setting Up Your Documentation
 

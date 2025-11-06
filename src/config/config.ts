@@ -4,9 +4,19 @@ import { fileURLToPath } from 'url';
 export function getConfig() {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const projectRoot = path.resolve(__dirname, '../../');
+
+  let baseDir: string;
+
+  if (process.env.MCP_RESOURCES_DIR) {
+    // If path is absolute, use as-is. If relative, resolve from cwd
+    baseDir = path.isAbsolute(process.env.MCP_RESOURCES_DIR)
+      ? process.env.MCP_RESOURCES_DIR
+      : path.resolve(process.cwd(), process.env.MCP_RESOURCES_DIR);
+  } else {
+    baseDir = path.join(projectRoot, 'resources');
+  }
+
   return {
-    baseDir: process.env.MCP_RESOURCES_DIR
-      ? path.resolve(process.env.MCP_RESOURCES_DIR)
-      : path.join(projectRoot, 'resources'),
+    baseDir,
   };
 }
