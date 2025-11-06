@@ -328,9 +328,14 @@ Content here.
 
     const results = await parser.parse(mdFile);
 
-    // MarkdownSectionParser doesn't extract metadata - it only splits into sections
+    // MarkdownSectionParser now extracts section metadata from comments
     expect(results.length).toBe(2); // Main and Section 1
-    expect(results.every((r) => r.description === undefined)).toBe(true);
+    // The first section "Main" has no comment, so no metadata
+    expect(results[0].description).toBeUndefined();
+    // Section 1 has metadata from the comment after it
+    expect(results[1].description).toBe('First section');
+    expect(results[1].whenToLoad).toBe('When needed');
+    expect(results[1].importance).toBe('high');
   });
 
   it('should create hierarchical IDs with filename and section', async () => {
