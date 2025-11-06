@@ -1,5 +1,6 @@
 import { ResourceRegistry } from '../core/interfaces/ResourceRegistry.js';
 import { Resource } from '../core/interfaces/Resource.js';
+import { ResourceSorter } from '../services/ResourceSorter.js';
 
 interface SerializedResource {
   id: string;
@@ -11,6 +12,8 @@ interface SerializedResource {
 }
 
 export class GetAvailableResourcesTool {
+  private readonly sorter = new ResourceSorter();
+
   constructor(private readonly registry: ResourceRegistry) {}
 
   async execute(args: { prefix?: string }): Promise<string> {
@@ -35,8 +38,11 @@ export class GetAvailableResourcesTool {
       return true; // Include all contexts and files
     });
 
+    // Sort by importance (high -> mid -> low -> null), then by ID
+    const sortedItems = this.sorter.sort(filteredItems);
+
     return JSON.stringify(
-      filteredItems.map((r) => this.serializeResource(r)),
+      sortedItems.map((r) => this.serializeResource(r)),
       null,
       2
     );

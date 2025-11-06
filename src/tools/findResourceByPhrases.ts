@@ -1,6 +1,9 @@
 import { ResourceRegistry } from '../core/interfaces/ResourceRegistry.js';
+import { ResourceSorter } from '../services/ResourceSorter.js';
 
 export class FindResourceByPhrasesTool {
+  private readonly sorter = new ResourceSorter();
+
   constructor(private readonly registry: ResourceRegistry) {}
 
   async execute(args: { phrases: string[] }): Promise<string> {
@@ -25,8 +28,11 @@ export class FindResourceByPhrasesTool {
       return true; // Include all contexts and files
     });
 
+    // Sort by importance (high -> mid -> low -> null), then by ID
+    const sortedResults = this.sorter.sort(filteredResults);
+
     return JSON.stringify(
-      filteredResults.map((r) => ({
+      sortedResults.map((r) => ({
         id: r.id,
         name: r.name,
         type: r.type,
