@@ -16,8 +16,17 @@ export class FindResourceByPhrasesTool {
       return true;
     });
 
+    // Filter out sections without metadata
+    const filteredResults = uniqueResults.filter((r) => {
+      if (r.type === 'section') {
+        // Only include sections that have at least one metadata field
+        return r.description || r.whenToLoad || r.importance;
+      }
+      return true; // Include all contexts and files
+    });
+
     return JSON.stringify(
-      uniqueResults.map((r) => ({
+      filteredResults.map((r) => ({
         id: r.id,
         name: r.name,
         type: r.type,

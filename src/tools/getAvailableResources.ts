@@ -26,8 +26,17 @@ export class GetAvailableResourcesTool {
       return true;
     });
 
+    // Filter out sections without metadata
+    const filteredItems = uniqueItems.filter((r) => {
+      if (r.type === 'section') {
+        // Only include sections that have at least one metadata field
+        return r.description || r.whenToLoad || r.importance;
+      }
+      return true; // Include all contexts and files
+    });
+
     return JSON.stringify(
-      uniqueItems.map((r) => this.serializeResource(r)),
+      filteredItems.map((r) => this.serializeResource(r)),
       null,
       2
     );

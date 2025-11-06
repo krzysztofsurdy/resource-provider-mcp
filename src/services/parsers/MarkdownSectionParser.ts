@@ -2,9 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import { ResourceParser } from '../../core/interfaces/ResourceParser';
 import { Resource } from '../../core/interfaces/Resource';
+import { Importance } from '../../core/enum/Importance';
 
 export class MarkdownSectionParser implements ResourceParser {
   private readonly HEADING_RE = /^(#{1,6})\s+(.+?)\s*$/gm;
+  private readonly BLOCK_RE = /<!--\s*([\s\S]*?)\s*-->/;
+  private readonly KV_RE = /^\s*([a-zA-Z][\w-]*?)\s*:\s*(.+?)\s*$/gm;
   private readonly MAX_DEPTH = 10;
 
   async parse(inputPath: string, depth = 0, contextPrefix = ''): Promise<Resource[]> {
@@ -67,19 +70,61 @@ export class MarkdownSectionParser implements ResourceParser {
       const body = text.slice(start, end).trim();
       const sectionId = this.slugify(title);
 
+      // Parse section metadata from comment right after heading
+      const metadata = this.parseSectionMetadata(body);
+
       sections.push({
         id: `${fileFullId}|${sectionId}`,
         name: title,
         type: 'section',
-        description: undefined,
-        whenToLoad: undefined,
-        importance: undefined,
+        description: metadata.description,
+        whenToLoad: metadata.whenToLoad,
+        importance: metadata.importance,
         children: [],
         content: body,
       });
     }
 
     return sections;
+  }
+
+  private parseSectionMetadata(sectionBody: string): Partial<Resource> {
+    const meta: Partial<Resource> = {};
+
+    // Look for HTML comment right after the heading
+    // The body includes the heading, so we need to skip it
+    const lines = sectionBody.split('\n');
+    if (lines.length < 2) return meta;
+
+    // Try to find comment block starting from line 1 (after heading)
+    const afterHeading = lines.slice(1).join('\n');
+    const commentMatch = afterHeading.match(this.BLOCK_RE);
+
+    if (!commentMatch) return meta;
+
+    const block = commentMatch[1];
+    for (const line of block.split('\n')) {
+      const kv = this.KV_RE.exec(line);
+      this.KV_RE.lastIndex = 0;
+      if (!kv) continue;
+      const key = kv[1].trim().toLowerCase();
+      const val = kv[2].trim();
+      if (key === 'description') {
+        meta.description = val;
+      } else if (key === 'whentoload' || key === 'whenload') {
+        meta.whenToLoad = val;
+      } else if (key === 'importance' || key === 'priority') {
+        const normalizedVal = val.toLowerCase();
+        if (this.isValidImportance(normalizedVal)) {
+          meta.importance = normalizedVal;
+        }
+      }
+    }
+    return meta;
+  }
+
+  private isValidImportance(value: string): value is Importance {
+    return value === 'low' || value === 'mid' || value === 'high';
   }
 
   private slugify(s: string): string {
