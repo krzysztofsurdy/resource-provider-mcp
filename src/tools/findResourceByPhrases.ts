@@ -1,38 +1,37 @@
 import { ResourceRegistry } from '../core/interfaces/ResourceRegistry.js';
-import { ResourceSorter } from '../services/ResourceSorter.js';
+import { ImportanceResourceSorter } from '../services/ImportanceResourceSorter.js';
+import { SimplePaginator } from '../services/SimplePaginator.js';
+import { SimpleResourceFilter } from '../services/SimpleResourceFilter.js';
 
 export class FindResourceByPhrasesTool {
-  private readonly sorter = new ResourceSorter();
+  private readonly sorter = new ImportanceResourceSorter();
+  private readonly paginator = new SimplePaginator();
+  private readonly filter = new SimpleResourceFilter();
+  private readonly DEFAULT_LIMIT = 15;
+  private readonly DEFAULT_PAGE = 1;
 
   constructor(private readonly registry: ResourceRegistry) {}
 
-  async execute(args: { phrases: string[] }): Promise<string> {
+  async execute(args: { phrases: string[]; limit?: number; page?: number }): Promise<string> {
+    const limit = args.limit ?? this.DEFAULT_LIMIT;
+    const page = args.page ?? this.DEFAULT_PAGE;
     const results = this.registry.searchByPhrases(args.phrases);
 
-    // Deduplicate by ID (keep first occurrence)
-    const seenIds = new Set<string>();
-    const uniqueResults = results.filter((r) => {
-      if (seenIds.has(r.id)) {
-        return false;
+    const uniqueResults = this.filter.uniqueBy(results, 'id');
+
+    const filteredResults = this.filter.filterBy(uniqueResults, (r) => {
+      if (r.type === 'section') {
+        return !!(r.description || r.whenToLoad || r.importance);
       }
-      seenIds.add(r.id);
       return true;
     });
 
-    // Filter out sections without metadata
-    const filteredResults = uniqueResults.filter((r) => {
-      if (r.type === 'section') {
-        // Only include sections that have at least one metadata field
-        return r.description || r.whenToLoad || r.importance;
-      }
-      return true; // Include all contexts and files
-    });
-
-    // Sort by importance (high -> mid -> low -> null), then by ID
     const sortedResults = this.sorter.sort(filteredResults);
 
-    return JSON.stringify(
-      sortedResults.map((r) => ({
+    const paginationResult = this.paginator.paginate(sortedResults, page, limit);
+
+    return JSON.stringify({
+      resources: paginationResult.items.map((r) => ({
         id: r.id,
         name: r.name,
         type: r.type,
@@ -40,8 +39,10 @@ export class FindResourceByPhrasesTool {
         whenToLoad: r.whenToLoad ?? null,
         importance: r.importance ?? null,
       })),
-      null,
-      2
-    );
+      limit: paginationResult.limit,
+      page: paginationResult.page,
+      totalPages: paginationResult.totalPages,
+      total: paginationResult.total,
+    });
   }
 }

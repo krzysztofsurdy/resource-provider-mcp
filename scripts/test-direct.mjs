@@ -60,8 +60,8 @@ async function main() {
       const parsed = JSON.parse(result);
 
       console.log('Result:\n');
-      console.log(result);
-      console.log(`\nTotal: ${parsed.length} resources`);
+      console.log(JSON.stringify(parsed, null, 2));
+      console.log(`\nTotal: ${parsed.total} resources`);
     } else if (toolName === 'getResourceContent') {
       if (!args.id) {
         throw new Error('id parameter is required');
@@ -85,8 +85,8 @@ async function main() {
       const parsed = JSON.parse(result);
 
       console.log('Result:\n');
-      console.log(result);
-      console.log(`\nFound: ${parsed.length} resources`);
+      console.log(JSON.stringify(parsed, null, 2));
+      console.log(`\nFound: ${parsed.total} resources`);
     } else {
       console.error(`Unknown tool: ${toolName}`);
       console.error(

@@ -1,9 +1,9 @@
 import { describe, it, expect } from '@jest/globals';
-import { ResourceSorter } from '../services/ResourceSorter';
+import { ImportanceResourceSorter } from '../services/ImportanceResourceSorter';
 import { Resource } from '../core/interfaces/Resource';
 
-describe('ResourceSorter', () => {
-  const sorter = new ResourceSorter();
+describe('ImportanceResourceSorter', () => {
+  const sorter = new ImportanceResourceSorter();
 
   it('should sort by importance: high, mid, low, null', () => {
     const resources: Resource[] = [

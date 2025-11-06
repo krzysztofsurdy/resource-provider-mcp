@@ -8,7 +8,6 @@ export function getConfig() {
   let baseDir: string;
 
   if (process.env.MCP_RESOURCES_DIR) {
-    // If path is absolute, use as-is. If relative, resolve from cwd
     baseDir = path.isAbsolute(process.env.MCP_RESOURCES_DIR)
       ? process.env.MCP_RESOURCES_DIR
       : path.resolve(process.cwd(), process.env.MCP_RESOURCES_DIR);

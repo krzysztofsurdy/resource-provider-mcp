@@ -45,12 +45,14 @@ async function main(): Promise<void> {
   const findResourceByPhrasesTool = new FindResourceByPhrasesTool(registry);
 
   const server = new Server(
-    { name: 'resource-provider-mcp', version: '1.0.0' },
+    { name: 'resource-provider-mcp', version: '1.4.0' },
     { capabilities: { tools: {} } }
   );
 
   const GetAvailableResourcesSchema = z.object({
     prefix: z.string().optional(),
+    limit: z.number().int().positive().optional(),
+    page: z.number().int().positive().optional(),
   });
 
   const GetResourceContentSchema = z.object({
@@ -60,6 +62,8 @@ async function main(): Promise<void> {
 
   const FindResourceByPhrasesSchema = z.object({
     phrases: z.array(z.string()).min(1),
+    limit: z.number().int().positive().optional(),
+    page: z.number().int().positive().optional(),
   });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -67,13 +71,21 @@ async function main(): Promise<void> {
       {
         name: 'getAvailableResources',
         description:
-          "List all resources (formatted). Optional prefix to narrow by id prefix like 'tests|testing'. Content is not included.",
+          "List all resources (formatted). Optional prefix to narrow by id prefix like 'tests|testing'. Content is not included. Returns paginated results.",
         inputSchema: {
           type: 'object',
           properties: {
             prefix: {
               type: 'string',
               description: 'Optional ID prefix to filter resources',
+            },
+            limit: {
+              type: 'number',
+              description: 'Number of resources per page (default: 15)',
+            },
+            page: {
+              type: 'number',
+              description: 'Page number (default: 1)',
             },
           },
         },
@@ -98,7 +110,8 @@ async function main(): Promise<void> {
       },
       {
         name: 'findResourceByPhrases',
-        description: 'Searches for resources by phrases (case-insensitive whole-word match).',
+        description:
+          'Searches for resources by phrases (case-insensitive whole-word match). Returns paginated results.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -106,6 +119,14 @@ async function main(): Promise<void> {
               type: 'array',
               items: { type: 'string' },
               description: 'Array of search phrases',
+            },
+            limit: {
+              type: 'number',
+              description: 'Number of resources per page (default: 15)',
+            },
+            page: {
+              type: 'number',
+              description: 'Page number (default: 1)',
             },
           },
           required: ['phrases'],

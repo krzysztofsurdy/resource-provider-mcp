@@ -1,6 +1,8 @@
 import { ResourceRegistry } from '../core/interfaces/ResourceRegistry.js';
 import { Resource } from '../core/interfaces/Resource.js';
-import { ResourceSorter } from '../services/ResourceSorter.js';
+import { ImportanceResourceSorter } from '../services/ImportanceResourceSorter.js';
+import { SimplePaginator } from '../services/SimplePaginator.js';
+import { SimpleResourceFilter } from '../services/SimpleResourceFilter.js';
 
 interface SerializedResource {
   id: string;
@@ -12,40 +14,39 @@ interface SerializedResource {
 }
 
 export class GetAvailableResourcesTool {
-  private readonly sorter = new ResourceSorter();
+  private readonly sorter = new ImportanceResourceSorter();
+  private readonly paginator = new SimplePaginator();
+  private readonly filter = new SimpleResourceFilter();
+  private readonly DEFAULT_LIMIT = 15;
+  private readonly DEFAULT_PAGE = 1;
 
   constructor(private readonly registry: ResourceRegistry) {}
 
-  async execute(args: { prefix?: string }): Promise<string> {
+  async execute(args: { prefix?: string; limit?: number; page?: number }): Promise<string> {
+    const limit = args.limit ?? this.DEFAULT_LIMIT;
+    const page = args.page ?? this.DEFAULT_PAGE;
     const flatItems = args.prefix ? this.registry.getByPrefix(args.prefix) : this.registry.getAll();
 
-    // Deduplicate by ID (keep first occurrence)
-    const seenIds = new Set<string>();
-    const uniqueItems = flatItems.filter((r) => {
-      if (seenIds.has(r.id)) {
-        return false;
+    const uniqueItems = this.filter.uniqueBy(flatItems, 'id');
+
+    const filteredItems = this.filter.filterBy(uniqueItems, (r) => {
+      if (r.type === 'section') {
+        return !!(r.description || r.whenToLoad || r.importance);
       }
-      seenIds.add(r.id);
       return true;
     });
 
-    // Filter out sections without metadata
-    const filteredItems = uniqueItems.filter((r) => {
-      if (r.type === 'section') {
-        // Only include sections that have at least one metadata field
-        return r.description || r.whenToLoad || r.importance;
-      }
-      return true; // Include all contexts and files
-    });
-
-    // Sort by importance (high -> mid -> low -> null), then by ID
     const sortedItems = this.sorter.sort(filteredItems);
 
-    return JSON.stringify(
-      sortedItems.map((r) => this.serializeResource(r)),
-      null,
-      2
-    );
+    const paginationResult = this.paginator.paginate(sortedItems, page, limit);
+
+    return JSON.stringify({
+      resources: paginationResult.items.map((r) => this.serializeResource(r)),
+      limit: paginationResult.limit,
+      page: paginationResult.page,
+      totalPages: paginationResult.totalPages,
+      total: paginationResult.total,
+    });
   }
 
   private serializeResource(r: Resource): SerializedResource {

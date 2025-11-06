@@ -4,6 +4,12 @@ import { ResourceParser } from '../../core/interfaces/ResourceParser';
 import { Resource } from '../../core/interfaces/Resource';
 import { Importance } from '../../core/enum/Importance';
 
+interface ResourceJson {
+  description?: string;
+  whenToLoad?: string;
+  importance?: string;
+}
+
 export class JsonResourceMetadataParser implements ResourceParser {
   private static readonly FILENAME = 'resource.json';
   private readonly MAX_DEPTH = 10;
@@ -22,7 +28,7 @@ export class JsonResourceMetadataParser implements ResourceParser {
     if (hasResourceJson) {
       try {
         const fileContent = fs.readFileSync(resourceJsonPath, 'utf8');
-        const raw = JSON.parse(fileContent);
+        const raw = JSON.parse(fileContent) as ResourceJson;
         const name = path.basename(inputPath);
         const contextId = this.slugify(name);
         const fullId = parentPrefix ? `${parentPrefix}|${contextId}` : contextId;
@@ -39,8 +45,8 @@ export class JsonResourceMetadataParser implements ResourceParser {
           content: null,
         };
         results.push(resource);
-      } catch {
-        // Ignore parsing errors for invalid resource.json files
+      } catch (error) {
+        void error;
       }
     }
 
@@ -61,15 +67,15 @@ export class JsonResourceMetadataParser implements ResourceParser {
             results.push(...childResources);
           }
         }
-      } catch {
-        // Ignore directory read errors
+      } catch (error) {
+        void error;
       }
     }
 
     return results;
   }
 
-  private validateImportance(value: unknown): Importance | undefined {
+  private validateImportance(value: string | undefined): Importance | undefined {
     if (value === 'low' || value === 'mid' || value === 'high') {
       return value;
     }

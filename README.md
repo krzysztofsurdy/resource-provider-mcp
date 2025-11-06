@@ -36,7 +36,7 @@ or you can register it as mcp directly in your config.
   "mcpServers": {
     "resource-provider": {
       "command": "npx",
-      "args": ["resource-provider-mcp"],
+      "args": ["-y", "resource-provider-mcp"],
       "workingDirectory": "."
     }
   }
@@ -86,9 +86,9 @@ Relative paths are resolved from the current working directory. If you specify `
 
 This MCP organizes docs in three levels: context (directory), file, and section (heading). Each level can have metadata.
 
-### Creating a Context
+### Creating a Resource
 
-A context is a directory with a `resource.json` file. All files inside inherit its metadata.
+A resource is a directory with a `resource.json` file. All files inside inherit its metadata.
 
 Create a directory structure:
 ```
@@ -119,7 +119,7 @@ In `guides/resource.json`:
 
 ### Adding Markdown Files
 
-Put `.md` files in your context directories. Add metadata at the top if you want to override context metadata:
+Put `.md` files in your resource directories. Add metadata at the top if you want to override resource metadata:
 
 `api/authentication.md`:
 ```markdown
@@ -206,9 +206,9 @@ The MCP only exposes:
 
 Files without metadata comments are still included, they just won't have description, whenToLoad, or importance fields.
 
-### Nested Contexts
+### Nested Resources
 
-You can nest contexts:
+You can nest resources:
 
 ```
 docs/
@@ -218,7 +218,7 @@ docs/
     └── auth.md
 ```
 
-The `api` directory is a nested context. Its ID will be `docs|api`. The auth file will be `docs|api|auth`.
+The `api` directory is a nested resource. Its ID will be `docs|api`. The auth file will be `docs|api|auth`.
 
 ## Testing Your Setup
 
@@ -241,6 +241,16 @@ npm run tool:findResourceByPhrases '{"phrases":["authentication"]}'
 
 These commands use the tools directly without going through MCP, useful for debugging your doc structure.
 
+## Tool Usage Recommendations
+
+The MCP provides three tools with different use cases:
+
+- **`findResourceByPhrases`**: Best for finding specific topics or features. Use this when you know what you're looking for.
+- **`getAvailableResources`**: Great for exploration and seeing what's available. With pagination (default 15 items per page), it's safe to use freely. However, search is more efficient when you have specific topics in mind.
+- **`getResourceContent`**: Loads the actual content of a specific resource.
+
+**Recommended workflow**: For specific topics, use search first. For exploration and discovery, list resources is perfectly fine with pagination.
+
 ## Tips for Good Documentation
 
 1. **Use clear descriptions**: The LLM uses these to decide what to load. "API authentication methods" is better than "Auth stuff".
@@ -255,52 +265,17 @@ These commands use the tools directly without going through MCP, useful for debu
 
 6. **Use descriptive headings**: Section names become part of the ID. "OAuth Setup" is better than "Setup".
 
-## Development
+## Instructions for LLMs
 
-Run tests:
-```bash
-npm test
-```
+After installing this MCP, copy the content from `AGENTS_EXAMPLE.md` to your agent's instructions file. This will teach the LLM how to use the resource provider tools effectively.
 
-Watch mode:
-```bash
-npm run test:watch
-```
+The `AGENTS_EXAMPLE.md` file contains:
+- Detailed descriptions of all three tools (getAvailableResources, findResourceByPhrases, getResourceContent)
+- Best practices for efficient resource discovery and loading
+- Workflow examples and common patterns
+- Guidelines on when and how to use each tool
 
-Build:
-```bash
-npm run build
-```
-
-The TypeScript source is in `src/`, compiled output goes to `dist/`.
-
-## How the LLM Uses This
-
-Once connected, CodeGen Agent can use three tools:
-
-### List Resources
-
-```
-getAvailableResources with no arguments
-```
-
-Shows the full hierarchy with metadata but no content. CodeGen Agent can see what exists and decide what to load.
-
-### Search Resources
-
-```
-findResourceByPhrases with phrases: ["authentication", "oauth"]
-```
-
-Finds resources matching those keywords. Search is whole-word and case-insensitive.
-
-### Load Content
-
-```
-getResourceContent with id: "api|authentication|oauth_setup"
-```
-
-Loads just that section. IDs use pipe delimiters to show hierarchy.
+This file is included in the npm package and can be found after installation.
 
 ## How It Works
 
@@ -311,7 +286,7 @@ The MCP server:
 4. Builds a hierarchical catalog with IDs like `context|file|section`
 5. Exposes three tools for listing, searching, and loading resources
 
-When CodeGen Agent calls a tool, the server returns just what was requested. Listing shows metadata only, loading shows content.
+When an LLM calls a tool, the server returns just what was requested. Listing shows metadata only, loading shows content.
 
 ## Troubleshooting
 
@@ -328,7 +303,7 @@ Common issues:
 Make sure:
 - Your docs directory has directories with `resource.json` files
 - The `RESOURCE_BASE_DIR` path is correct and absolute
-- You have at least one `.md` file in a context directory
+- You have at least one `.md` file in a resource directory
 
 ### Metadata Not Working
 

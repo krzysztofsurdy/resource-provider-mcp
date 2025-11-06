@@ -70,7 +70,6 @@ export class MarkdownSectionParser implements ResourceParser {
       const body = text.slice(start, end).trim();
       const sectionId = this.slugify(title);
 
-      // Parse section metadata from comment right after heading
       const metadata = this.parseSectionMetadata(body);
 
       sections.push({
@@ -91,12 +90,8 @@ export class MarkdownSectionParser implements ResourceParser {
   private parseSectionMetadata(sectionBody: string): Partial<Resource> {
     const meta: Partial<Resource> = {};
 
-    // Look for HTML comment right after the heading
-    // The body includes the heading, so we need to skip it
     const lines = sectionBody.split('\n');
     if (lines.length < 2) return meta;
-
-    // Try to find comment block starting from line 1 (after heading)
     const afterHeading = lines.slice(1).join('\n');
     const commentMatch = afterHeading.match(this.BLOCK_RE);
 
